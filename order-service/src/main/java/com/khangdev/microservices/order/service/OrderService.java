@@ -1,5 +1,6 @@
 package com.khangdev.microservices.order.service;
 
+import com.khangdev.microservices.order.client.InventoryClient;
 import com.khangdev.microservices.order.dto.OrderResponse;
 import com.khangdev.microservices.order.dto.PlaceOrderRequest;
 import com.khangdev.microservices.order.entity.Order;
@@ -18,9 +19,13 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final InventoryClient inventoryClient;
 
     @Transactional
     public OrderResponse placeOrder(PlaceOrderRequest request){
+        if(!inventoryClient.isInStock(request.skuCode(), request.quantity())){
+            throw new RuntimeException("Product is not in stock with sku code: " + request.skuCode());
+        }
         Order newOrder = Order.builder()
                 .orderNumber(UUID.randomUUID().toString())
                 .skuCode(request.skuCode())
